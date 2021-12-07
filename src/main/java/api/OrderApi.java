@@ -1,7 +1,6 @@
 package api;
 
 import io.qameta.allure.Step;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import requests.CreateOrderRequest;
@@ -9,9 +8,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 public class OrderApi {
-    public OrderApi() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
-    }
 
     @Step("Send POST request to /api/v1/orders")
     public Response requestCreateOrder(CreateOrderRequest createOrderRequest) {
@@ -20,7 +16,7 @@ public class OrderApi {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(createOrderRequest)
-                .post("/api/v1/orders");
+                .post(EndpointsOrderApi.POST_CREATE_ORDERS);
     }
 
     @Step("Send Get request to /api/v1/orders?limit=10&page=0")
@@ -28,7 +24,12 @@ public class OrderApi {
         return given()
                 .when()
                 .header("Content-type", "application/json")
-                .get("/api/v1/orders?limit=10&page=0");
+                .get(EndpointsOrderApi.GET_10AVAILABLE_ORDERS);
+    }
+
+    @Step("Check statusCode create Order List Ok")
+    public void checkStatusCodeCreateOrderListOk(Response response){
+        response.then().assertThat().statusCode(200);
     }
 
     @Step("Check response body Order List")

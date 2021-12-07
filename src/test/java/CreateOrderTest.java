@@ -1,7 +1,9 @@
 
 import api.OrderApi;
 import io.qameta.allure.Description;
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,6 +15,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class CreateOrderTest {
+
+    @BeforeEach
+    public void setUp() {
+        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
+    }
+
     @ParameterizedTest
     @DisplayName("Check create order")
     @Description("Order creating with parametrization")

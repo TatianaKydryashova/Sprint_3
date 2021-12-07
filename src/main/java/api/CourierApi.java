@@ -1,80 +1,42 @@
 package api;
 
 import io.qameta.allure.Step;
-import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import requests.CreateCourierRequest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 public class CourierApi {
-    public CourierApi() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
-    }
 
     @Step("Send POST request to /api/v1/courier")
-    public Response requestCreateCourier(String login, String password, String firstName) {
-        String registerRequestBody = "{\"login\":\"" + login + "\","
-                + "\"password\":\"" + password + "\","
-                + "\"firstName\":\"" + firstName + "\"}";
+    public Response requestCreateCourier(CreateCourierRequest createCourierRequest) {
         return given()
                 .when()
-                .header("Content-type", "application/json")
-                .body(registerRequestBody)
-                .post("/api/v1/courier");
-
-    }
-
-    @Step("Send POST request to /api/v1/courier with required fields")
-    public Response requestCreateCourierWithRequiredFields(String login, String password) {
-        String registerRequestBody = "{\"login\":\"" + login + "\","
-                + "\"password\":\"" + password + "\"}";
-        return given()
-                .when()
-                .header("Content-type", "application/json")
-                .body(registerRequestBody)
-                .post("/api/v1/courier");
-
-    }
-
-    @Step("Send POST request to /api/v1/courier without field")
-    public Response requestCreateCourierWithoutField(String login, String firstName) {
-        String registerRequestBody = "{\"login\":\"" + login + "\","
-                + "\"firstName\":\"" + firstName + "\"}";
-        return given()
-                .when()
-                .header("Content-type", "application/json")
-                .body(registerRequestBody)
-                .post("/api/v1/courier");
-
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(createCourierRequest)
+                .post(EndpointsCourierApi.POST_CREATE_COURIER);
     }
 
     @Step("Send POST request to /api/v1/courier/login")
-    public Response requestIdCourier(String login, String password) {
-        String registerRequestBody = "{\"login\":\"" + login + "\","
-                + "\"password\":\"" + password + "\"}";
+    public Response requestIdCourier(CreateCourierRequest createCourierRequest) {
         return given()
                 .when()
-                .header("Content-type", "application/json")
-                .body(registerRequestBody)
-                .post("/api/v1/courier/login");
-    }
-
-    @Step("Send POST request to /api/v1/courier/login with one login")
-    public Response requestIdCourierWithOneLogin(String login) {
-        String registerRequestBody = "{\"login\":\"" + login + "\"}";
-        return given()
-                .when()
-                .header("Content-type", "application/json")
-                .body(registerRequestBody)
-                .post("/api/v1/courier/login");
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(createCourierRequest)
+                .post(EndpointsCourierApi.POST_LOGIN_COURIER);
     }
 
     @Step("Send DELETE request to /api/v1/courier/{id}")
     public Response requestDeleteCourier(int id) {
         return given()
                 .when()
-                .header("Content-type", "application/json")
-                .delete("/api/v1/courier/{id}", id);
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .delete(EndpointsCourierApi.DELETE_COURIER, id);
     }
 
     @Step("Check statusCode create couriers OK")
@@ -113,8 +75,8 @@ public class CourierApi {
     }
 
     @Step("Check response body authorization courier OK")
-    public void checkResponseBodyAuthorizationCourierOK(Response response, int id){
-        response.then().assertThat().body("id", equalTo(id));
+    public void checkResponseBodyAuthorizationCourierOK(Response response){
+        response.then().assertThat().body("id", notNullValue());
     }
 
     @Step("Check statusCode authorization couriers with a non-existent pair of login / password")

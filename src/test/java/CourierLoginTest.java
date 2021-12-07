@@ -1,34 +1,44 @@
 import api.CourierApi;
 import io.qameta.allure.Description;
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import java.util.ArrayList;
+import requests.CreateCourierRequest;
+
 public class CourierLoginTest {
+
+    CreateCourierRequest createCourierRequest;
+    int id;
+
+    @BeforeEach
+    public void setUp() {
+        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
+        CourierApi courierApi = new CourierApi();
+        createCourierRequest = CreateCourierRequest.buildRequiredFields();
+        courierApi.requestCreateCourier(createCourierRequest);
+        id = courierApi.requestIdCourier(createCourierRequest).then().extract().body().path("id");
+    }
 
     @Test
     @DisplayName("Check authorization courier")
     @Description("Сourier authorization сhecking")
-    public void checkAuthorizationCourierTest(){
-        ScooterRegisterCourier scooterRegisterCourier = new ScooterRegisterCourier();
-        ArrayList<String> loginPass = scooterRegisterCourier.registerNewCourierAndReturnLoginPassword();
+    public void checkAuthorizationCourierTest() {
         CourierApi courierApi = new CourierApi();
-        Response response = courierApi.requestIdCourier(loginPass.get(0), loginPass.get(1));
-        int id = response.then().extract().body().path("id");
+        Response response = courierApi.requestIdCourier(createCourierRequest);
         courierApi.checkStatusCodeAuthorizationCouriersOk(response);
-        courierApi.checkResponseBodyAuthorizationCourierOK(response, id);
-        courierApi.requestDeleteCourier(id);
+        courierApi.checkResponseBodyAuthorizationCourierOK(response);
     }
-
     @Test
     @DisplayName("Check authorization courier with a non-existent pair of login / pass")
     @Description("The system will return an error if username or password is incorrect")
-    public void checkAuthorizationCourierWithNonExistentLoginOrPassTest(){
-        String courierLogin = RandomStringUtils.randomAlphabetic(10);
-        String courierPassword = RandomStringUtils.randomAlphabetic(10);
+    public void checkAuthorizationCourierWithNonExistentLoginOrPassTest() {
         CourierApi courierApi = new CourierApi();
-        Response response = courierApi.requestIdCourier(courierLogin, courierPassword);
+        createCourierRequest.setLogin(RandomStringUtils.randomAlphabetic(10));
+        Response response = courierApi.requestIdCourier(createCourierRequest);
         courierApi.checkStatusCodeAuthorizationCouriersWithNonExistentLoginPass(response);
         courierApi.checkResponseBodyAuthorizationCourierWithNonExistentLoginPass(response);
     }
@@ -37,17 +47,18 @@ public class CourierLoginTest {
     @DisplayName("Check authorization courier with one login")
     @Description("If any field is missing, the request returns an error")
     public void checkAuthorizationCourierWithOneLoginTest(){
-        ScooterRegisterCourier scooterRegisterCourier = new ScooterRegisterCourier();
-        ArrayList<String> loginPass = scooterRegisterCourier.registerNewCourierAndReturnLoginPassword();
         CourierApi courierApi = new CourierApi();
-        Response responseAdd = courierApi.requestIdCourier(loginPass.get(0), loginPass.get(1));
-        int id = responseAdd.then().extract().body().path("id");
-        Response responseNotAdd = courierApi.requestIdCourierWithOneLogin(loginPass.get(0));
-        courierApi.checkStatusCodeCouriersWithoutField(responseNotAdd);
-        courierApi.checkResponseBodyAuthorizationCourierWithoutField(responseNotAdd);
-        courierApi.requestDeleteCourier(id);
+        createCourierRequest.setPassword("");
+        Response response = courierApi.requestIdCourier(createCourierRequest);
+        courierApi.checkStatusCodeCouriersWithoutField(response);
+        courierApi.checkResponseBodyAuthorizationCourierWithoutField(response);
     }
 
-
-
+    @AfterEach
+    public void deleteCourier() {
+        CourierApi courierApi = new CourierApi();
+        if (createCourierRequest.getLogin() != null && createCourierRequest.getPassword() != null) {
+            courierApi.requestDeleteCourier(id);
+        }
+    }
 }
